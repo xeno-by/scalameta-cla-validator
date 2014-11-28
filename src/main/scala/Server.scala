@@ -17,11 +17,10 @@ object Server {
 
 class Hello extends Service[HttpRequest, HttpResponse] {
   def apply(request: HttpRequest): Future[HttpResponse] = {
+    val ghapi = Github.API.fromUser(Properties.envOrElse("GITHUB_USER", ""), Properties.envOrElse("GITHUB_PASSWORD", ""))
     val response = Response()
     response.setStatusCode(200)
-    response.setContentString("Test!")
-    println("***" + request.getContent.toString("UTF-8").substring(0, 30))
-    println(request.getContent.toString("UTF-8").replace("\n", "  "))
+    response.setContentString("Test")
     Future(response)
   }
 }
