@@ -20,6 +20,8 @@ class Hello extends Service[HttpRequest, HttpResponse] {
     val response = Response()
     response.setStatusCode(200)
     response.setContentString("Test!")
+    println("***" + request.getContent.toString("UTF-8").substring(0, 30))
+    println(request.getContent.toString("UTF-8").replace("\n", "  "))
     Future(response)
   }
 }
