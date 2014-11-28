@@ -70,7 +70,7 @@ class Hello extends Service[HttpRequest, HttpResponse] {
         val JString(user) = eventJson \ "pull_request" \ "base" \ "repo" \ "owner" \ "login"
         val JString(repo) = eventJson \ "pull_request" \ "base" \ "repo" \ "name"
         val JInt(number) = eventJson \ "pull_request" \ "number"
-        val message = s"Hello, @$contributor! Thank you for your interest in contributing to the Scala project. Please sign the [Scala CLA](http://typesafe.com/contribute/cla/scala), so that we can proceed with reviewing your pull request."
+        val message = s"Hello, @$contributor! Thank you for your interest in contributing to the scala.meta project. Please sign the [CLA](http://typesafe.com/contribute/cla/scala), so that we can proceed with reviewing your pull request."
         val ghapi = Github.API.fromUser(Properties.envOrElse("GITHUB_USER", ""), Properties.envOrElse("GITHUB_PASSWORD", ""))
         ghapi.addPRComment(user, repo, number.toString, message)
         s"Asked $contributor to sign the CLA at ${render(eventJson \ "pull_request" \ "html_url")}"
