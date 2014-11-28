@@ -29,13 +29,18 @@ class Hello extends Service[HttpRequest, HttpResponse] {
           "sha1=" + mac.doFinal(payload.getBytes("UTF-8")).map("%02x".format(_)).mkString
         }
         if (actualSignature == expectedSignature) {
-          val ghapi = Github.API.fromUser(Properties.envOrElse("GITHUB_USER", ""), Properties.envOrElse("GITHUB_PASSWORD", ""))
-          // NOTE: see https://developer.github.com/v3/activity/events/types/#pullrequestevent
-          // TODO: validate the payload
-          val response = Response()
-          response.setStatusCode(200)
-          response.setContentString("TODO")
-          Future(response)
+          try {
+            processPullRequestEvent(payload)
+            Future(new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK))
+          } catch {
+            case ex: Exception =>
+              val response = Response()
+              response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR)
+              val writer = new java.io.StringWriter()
+              ex.printStackTrace(new java.io.PrintWriter(writer))
+              response.setContentString(writer.toString)
+              Future(response)
+          }
         } else {
           Future(new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.FORBIDDEN))
         }
@@ -45,5 +50,10 @@ class Hello extends Service[HttpRequest, HttpResponse] {
     } else {
       Future(new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND))
     }
+  }
+  private def processPullRequestEvent(eventJson: String): Unit = {
+    val ghapi = Github.API.fromUser(Properties.envOrElse("GITHUB_USER", ""), Properties.envOrElse("GITHUB_PASSWORD", ""))
+    // NOTE: see https://developer.github.com/v3/activity/events/types/#pullrequestevent
+    throw new Exception()
   }
 }
