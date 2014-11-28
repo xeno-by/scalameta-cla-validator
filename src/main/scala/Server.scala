@@ -64,8 +64,12 @@ class Hello extends Service[HttpRequest, HttpResponse] {
       })
       val JBool(signed) = statusJson \ "signed"
       if (!signed) {
+        val JString(user) = eventJson \ "pull_request" \ "base" \ "repo" \ "owner" \ "login"
+        val JString(repo) = eventJson \ "pull_request" \ "base" \ "repo" \ "name"
+        val JInt(number) = eventJson \ "pull_request" \ "number"
+        val message = s"Hello, @$contributor! Thank you for your interest in contributing to the Scala project. Please sign the [Scala CLA](http://typesafe.com/contribute/cla/scala), so that we can proceed with reviewing your pull request."
         val ghapi = Github.API.fromUser(Properties.envOrElse("GITHUB_USER", ""), Properties.envOrElse("GITHUB_PASSWORD", ""))
-        // TODO: comment on the pull request that it's necessary to sign the CLA
+        ghapi.addPRComment(user, repo, number.toString, message)
       }
     }
   }
