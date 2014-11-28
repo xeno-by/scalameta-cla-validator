@@ -30,8 +30,11 @@ class Hello extends Service[HttpRequest, HttpResponse] {
         }
         if (actualSignature == expectedSignature) {
           try {
-            processPullRequestEvent(payload)
-            Future(new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK))
+            val status = processPullRequestEvent(payload)
+            val response = Response()
+            response.setStatus(HttpResponseStatus.OK)
+            response.setContentString(status)
+            Future(response)
           } catch {
             case ex: Exception =>
               val response = Response()
@@ -51,7 +54,7 @@ class Hello extends Service[HttpRequest, HttpResponse] {
       Future(new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND))
     }
   }
-  private def processPullRequestEvent(event: String): Unit = {
+  private def processPullRequestEvent(event: String): String = {
     // NOTE: see https://developer.github.com/v3/activity/events/types/#pullrequestevent
     import net.liftweb.json._
     val eventJson = parse(event)
@@ -70,7 +73,12 @@ class Hello extends Service[HttpRequest, HttpResponse] {
         val message = s"Hello, @$contributor! Thank you for your interest in contributing to the Scala project. Please sign the [Scala CLA](http://typesafe.com/contribute/cla/scala), so that we can proceed with reviewing your pull request."
         val ghapi = Github.API.fromUser(Properties.envOrElse("GITHUB_USER", ""), Properties.envOrElse("GITHUB_PASSWORD", ""))
         ghapi.addPRComment(user, repo, number.toString, message)
+        s"Asked $contributor to sign the CLA at ${render(eventJson \ "pull_request" \ "html_url")}"
+      } else {
+        s"$contributor has already signed the CLA"
       }
+    } else {
+      s"Ignored action $action"
     }
   }
 }
