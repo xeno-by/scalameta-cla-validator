@@ -51,9 +51,22 @@ class Hello extends Service[HttpRequest, HttpResponse] {
       Future(new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND))
     }
   }
-  private def processPullRequestEvent(eventJson: String): Unit = {
-    val ghapi = Github.API.fromUser(Properties.envOrElse("GITHUB_USER", ""), Properties.envOrElse("GITHUB_PASSWORD", ""))
+  private def processPullRequestEvent(event: String): Unit = {
     // NOTE: see https://developer.github.com/v3/activity/events/types/#pullrequestevent
-    throw new Exception()
+    import net.liftweb.json._
+    val eventJson = parse(event)
+    val JString(action) = eventJson \ "action"
+    if (action == "opened") {
+      val JString(contributor) = eventJson \ "pull_request" \ "user" \ "login"
+      val statusJson = parse({
+        try dispatch.classic.Http(dispatch.classic.:/("typesafe.com")/("contribute/cla/scala/check/" + contributor + "1") >- Predef.identity)
+        catch { case dispatch.classic.StatusCode(404, contents) => contents }
+      })
+      val JBool(signed) = statusJson \ "signed"
+      if (!signed) {
+        val ghapi = Github.API.fromUser(Properties.envOrElse("GITHUB_USER", ""), Properties.envOrElse("GITHUB_PASSWORD", ""))
+        // TODO: comment on the pull request that it's necessary to sign the CLA
+      }
+    }
   }
 }
