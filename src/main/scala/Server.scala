@@ -59,7 +59,7 @@ class Hello extends Service[HttpRequest, HttpResponse] {
     if (action == "opened") {
       val JString(contributor) = eventJson \ "pull_request" \ "user" \ "login"
       val statusJson = parse({
-        try dispatch.classic.Http(dispatch.classic.:/("typesafe.com")/("contribute/cla/scala/check/" + contributor + "1") >- Predef.identity)
+        try dispatch.classic.Http(dispatch.classic.:/("typesafe.com")/("contribute/cla/scala/check/" + contributor) >- Predef.identity)
         catch { case dispatch.classic.StatusCode(404, contents) => contents }
       })
       val JBool(signed) = statusJson \ "signed"
